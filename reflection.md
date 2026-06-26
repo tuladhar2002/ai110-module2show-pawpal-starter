@@ -5,7 +5,10 @@
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+=> A user should be able to add a pet, schedule task/chore, gain points by completeing tasks, use points to level up pet or add a new pet  
+
 - What classes did you include, and what responsibilities did you assign to each?
+=> User, Pets, Tasks, Pet Store
 
 **b. Design changes**
 

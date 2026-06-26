@@ -1,0 +1,48 @@
+classDiagram
+    class User {
+        +str name
+        +str email
+        +int points
+        +list pets
+        +add_pet(pet) None
+        +complete_task(task) None
+        +spend_points(amount) bool
+        +get_total_points() int
+        +view_schedule() list
+    }
+
+    class Pet {
+        +str name
+        +str species
+        +int level
+        +int age
+        +str owner_name
+        +level_up() None
+        +get_info() str
+    }
+
+    class Task {
+        +str title
+        +int duration_minutes
+        +str priority
+        +bool is_complete
+        +str assigned_pet_name
+        +str scheduled_time
+        +complete() int
+        +schedule(time) None
+        +get_priority_score() int
+    }
+
+    class PetStore {
+        +list available_pets
+        +dict items
+        +int adoption_cost
+        +browse_items() list
+        +adopt_pet(user, pet_name) Pet
+        +purchase_item(user, item_name) bool
+    }
+
+    User "1" --> "many" Pet : owns
+    User "1" --> "many" Task : schedules
+    Task "many" --> "1" Pet : assigned to
+    User --> PetStore : visits to spend points
