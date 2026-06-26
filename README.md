@@ -67,7 +67,12 @@ pytest --cov
 Sample test output:
 
 ```
-# Paste your pytest output here
+=== Daily Schedule for Jordan's Pets ===
+  [07:00] Morning walk | high priority | 30 min | daily | Pending
+  [08:00] Feed breakfast | high priority | 10 min | daily | Pending
+  [09:30] Clean litter box | medium priority | 10 min | daily | Pending
+  [18:00] Playtime with feather toy | low priority | 20 min | daily | Pending
+  (4 task(s) remaining)
 ```
 
 ## 📐 Smarter Scheduling
