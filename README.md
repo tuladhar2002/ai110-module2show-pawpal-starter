@@ -64,7 +64,7 @@ pytest
 pytest --cov
 ```
 
-Sample test output:
+test output:
 
 ```
 === Daily Schedule for Jordan's Pets ===
@@ -77,14 +77,17 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
-
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Sort by priority then time | `Scheduler.get_sorted_schedule()` | High-priority tasks first; ties broken by `HH:MM` |
+| Sort by time only | `Scheduler.sort_by_time()` | Strict chronological order, any task list |
+| Filter by pet | `Scheduler.get_tasks_by_pet()` | All tasks for a named pet regardless of status |
+| Filter by status | `Scheduler.get_tasks_by_status()` | Pending or completed tasks across all pets |
+| Filter pending by pet | `Scheduler.get_pending_by_pet()` | Combines pet + completion filter in one call |
+| Same-pet conflict detection | `Scheduler.get_conflicts()` | Flags overlapping duration windows on the same pet |
+| Cross-pet conflict detection | `Scheduler.get_cross_pet_conflicts()` | Flags windows where owner would need to be in two places |
+| Combined conflict warnings | `Scheduler.warn_conflicts()` | Prints `[SAME-PET]` / `[CROSS-PET]` labels; never raises |
+| Auto-schedule next occurrence | `Task.next_occurrence()` + `Scheduler.complete_task()` | Completing a daily/weekly task spawns the next one via `timedelta` |
 
 ## 📸 Demo Walkthrough
 

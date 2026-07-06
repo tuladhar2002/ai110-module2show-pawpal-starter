@@ -29,6 +29,10 @@
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
 
+**Tradeoff: conflict detection compares overlapping duration windows, not just exact start times.**
+
+The scheduler flags two tasks as conflicting when their time windows overlap (`start_a < end_b and start_b < end_a`). This is more accurate than matching start times exactly, but it means tasks without a `due_date` are assumed to be on the same day — which can produce false conflicts between today's task and tomorrow's auto-spawned copy. This is acceptable because `due_date` is set automatically for all recurring tasks; only manually created tasks without a date are affected, which is an uncommon case.
+
 ---
 
 ## 3. AI Collaboration
