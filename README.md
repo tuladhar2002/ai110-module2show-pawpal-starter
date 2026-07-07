@@ -57,23 +57,30 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 ## 🧪 Testing PawPal+
 
 ```bash
-# Run the full test suite:
-pytest
-
-# Run with coverage:
-pytest --cov
+python -m pytest
 ```
 
-test output:
+**What the tests cover:**
+
+- **Sorting** — tasks are returned in chronological order; high-priority tasks rank above low-priority ones regardless of scheduled time
+- **Recurrence** — completing a `daily` task spawns a new task for the next day; `weekly` tasks advance by 7 days; `once` tasks produce no clone; completing the same task twice does not award points a second time
+- **Conflict detection** — overlapping windows on the same pet are flagged; back-to-back tasks (touching but not overlapping) are not; cross-pet overlaps are caught separately; a pet with no tasks returns an empty conflict list
+
+**Successful test run:**
 
 ```
-=== Daily Schedule for Jordan's Pets ===
-  [07:00] Morning walk | high priority | 30 min | daily | Pending
-  [08:00] Feed breakfast | high priority | 10 min | daily | Pending
-  [09:30] Clean litter box | medium priority | 10 min | daily | Pending
-  [18:00] Playtime with feather toy | low priority | 20 min | daily | Pending
-  (4 task(s) remaining)
+========================== test session starts ===========================
+platform darwin -- Python 3.12.4, pytest-7.4.4, pluggy-1.0.0
+rootdir: /Users/tuladhar2002/ai110-module2show-pawpal-starter
+plugins: anyio-4.2.0
+collected 13 items
+
+tests/test_pawpal.py .............                                 [100%]
+
+=========================== 13 passed in 0.01s ===========================
 ```
+
+Confidence Level: ★★★★☆ (4/5)
 
 ## 📐 Smarter Scheduling
 
