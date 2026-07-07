@@ -1,0 +1,64 @@
+classDiagram
+    class Owner {
+        +str name
+        +str email
+        +int points
+        +list pets
+        +add_pet(pet) None
+        +get_all_tasks() list
+        +adjust_points(amount) bool
+        +earn_points(amount) None
+        +spend_points(amount) bool
+        +get_summary() str
+    }
+
+    class Pet {
+        +str name
+        +str species
+        +int age
+        +int level
+        +list tasks
+        +add_task(task) None
+        +get_pending_tasks() list
+        +level_up() None
+        +get_info() str
+    }
+
+    class Task {
+        +str description
+        +str time
+        +str frequency
+        +str priority
+        +int duration_minutes
+        +str assigned_pet_name
+        +bool is_complete
+        +str due_date
+        +complete() int
+        +get_priority_score() int
+        +next_occurrence() Task
+        +conflicts_with(other) bool
+        +end_time_minutes() int
+        +reset() None
+    }
+
+    class Scheduler {
+        +Owner owner
+        +get_pending_tasks() list
+        +get_sorted_schedule() list
+        +get_schedule_by_time() list
+        +sort_by_time(tasks) list
+        +get_tasks_by_pet(pet_name) list
+        +get_tasks_by_status(completed) list
+        +get_pending_by_pet(pet_name) list
+        +get_conflicts(tasks) list
+        +get_cross_pet_conflicts(tasks) list
+        +get_all_conflicts() list
+        +warn_conflicts() None
+        +complete_task(task) None
+        +reset_recurring_tasks(frequency) int
+    }
+
+    Owner "1" --> "many" Pet : owns
+    Pet "1" --> "many" Task : has
+    Task "many" --> "1" Pet : assigned to
+    Owner "1" --> "1" Scheduler : managed by

@@ -4,23 +4,19 @@ from pawpal_system import Task, Pet, Owner, Scheduler
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 st.title("🐾 PawPal+")
 
-# --- session state vault ---------------------------------------------------
-# Each key is checked with "not in" so the object is created only once.
-# Streamlit reruns the entire script on every interaction; the guard prevents
-# overwriting data the user has already entered.
+# ── session state vault ────────────────────────────────────────────────────
 if "owner" not in st.session_state:
     st.session_state.owner = None
 if "scheduler" not in st.session_state:
     st.session_state.scheduler = None
-# --------------------------------------------------------------------------
 
 # ── 1. Owner setup ─────────────────────────────────────────────────────────
 st.subheader("Owner Setup")
-owner_name = st.text_input("Owner name", value="Jordan")
+owner_name  = st.text_input("Owner name",  value="Jordan")
 owner_email = st.text_input("Owner email", value="jordan@example.com")
 
 if st.button("Create owner"):
-    st.session_state.owner = Owner(name=owner_name, email=owner_email)
+    st.session_state.owner     = Owner(name=owner_name, email=owner_email)
     st.session_state.scheduler = Scheduler(owner=st.session_state.owner)
     st.success(f"Owner '{owner_name}' created.")
 
@@ -30,35 +26,31 @@ if st.session_state.owner:
 st.divider()
 
 # ── 2. Add a pet ───────────────────────────────────────────────────────────
-# When the form is submitted:
-#   1. A Pet instance is built from the form values.
-#   2. owner.add_pet(pet) appends it to owner.pets  ← the key method call.
-#   3. Streamlit reruns; the pet list below re-renders automatically because
-#      st.session_state.owner now has one more pet in its .pets list.
 st.subheader("Add a Pet")
 pet_name = st.text_input("Pet name", value="Mochi")
-species = st.selectbox("Species", ["dog", "cat", "other"])
-pet_age = st.number_input("Pet age (years)", min_value=0, max_value=30, value=3)
+species  = st.selectbox("Species", ["dog", "cat", "other"])
+pet_age  = st.number_input("Pet age (years)", min_value=0, max_value=30, value=3)
 
 if st.button("Add pet"):
     if st.session_state.owner is None:
         st.error("Create an owner first.")
     else:
-        pet = Pet(name=pet_name, species=species, age=pet_age)
-        st.session_state.owner.add_pet(pet)          # Owner.add_pet() does the work
-        st.success(f"Added pet '{pet_name}' to {st.session_state.owner.name}.")
+        st.session_state.owner.add_pet(Pet(name=pet_name, species=species, age=pet_age))
+        st.success(f"Added '{pet_name}' to {st.session_state.owner.name}.")
 
 if st.session_state.owner and st.session_state.owner.pets:
-    st.write("**Pets on file:**")
-    for p in st.session_state.owner.pets:
-        st.markdown(f"- {p.get_info()}")
+    st.table([
+        {"Name": p.name, "Species": p.species, "Age": p.age, "Level": p.level,
+         "Tasks": len(p.tasks)}
+        for p in st.session_state.owner.pets
+    ])
 
 st.divider()
 
 # ── 3. Schedule a task ─────────────────────────────────────────────────────
 st.subheader("Schedule a Task")
 
-owner = st.session_state.owner
+owner      = st.session_state.owner
 pet_options = [p.name for p in owner.pets] if owner else []
 
 if not pet_options:
@@ -88,7 +80,6 @@ else:
             duration_minutes=int(task_duration),
             assigned_pet_name=selected_pet,
         )
-        # find the matching Pet and call Pet.add_task()
         for p in owner.pets:
             if p.name == selected_pet:
                 p.add_task(task)
@@ -98,30 +89,77 @@ else:
 st.divider()
 
 # ── 4. Generate schedule ───────────────────────────────────────────────────
-st.subheader("Generate Schedule")
+st.subheader("Today's Schedule")
 
 if st.button("Generate schedule"):
     if st.session_state.scheduler is None:
         st.error("Create an owner first.")
     else:
         scheduler: Scheduler = st.session_state.scheduler
-        schedule = scheduler.get_sorted_schedule()
+
+        # ── sorted schedule table ──────────────────────────────────────────
+        schedule = scheduler.get_sorted_schedule()   # high priority first
 
         if not schedule:
-            st.warning("No pending tasks to schedule.")
+            st.warning("No pending tasks — all done or none added yet.")
         else:
-            st.success(f"{len(schedule)} task(s) — high priority first:")
-            for task in schedule:
-                st.markdown(f"- `{task}`")
+            st.success(f"{len(schedule)} task(s) pending")
+            st.table([
+                {
+                    "Time":     t.time,
+                    "Task":     t.description,
+                    "Pet":      t.assigned_pet_name,
+                    "Priority": t.priority.capitalize(),
+                    "Duration": f"{t.duration_minutes} min",
+                    "Repeat":   t.frequency,
+                }
+                for t in schedule
+            ])
 
-        conflicts = scheduler.get_conflicts()
-        if conflicts:
-            st.error("Conflicts detected:")
-            for a, b in conflicts:
-                st.markdown(
-                    f"- **{a.assigned_pet_name}**: '{a.description}' "
-                    f"({a.time}, {a.duration_minutes}min) overlaps "
-                    f"'{b.description}' ({b.time}, {b.duration_minutes}min)"
-                )
+        # ── per-pet pending summary ────────────────────────────────────────
+        if st.session_state.owner and st.session_state.owner.pets:
+            st.markdown("**Pending tasks by pet:**")
+            cols = st.columns(len(st.session_state.owner.pets))
+            for col, pet in zip(cols, st.session_state.owner.pets):
+                pending = scheduler.get_pending_by_pet(pet.name)
+                col.metric(label=f"{pet.name} ({pet.species})",
+                           value=f"{len(pending)} task(s)")
+
+        st.divider()
+
+        # ── conflict warnings ──────────────────────────────────────────────
+        # A conflict means the owner would need to be in two places at once,
+        # so we surface it prominently with actionable detail.
+        same   = scheduler.get_conflicts()
+        across = scheduler.get_cross_pet_conflicts()
+
+        if not same and not across:
+            st.success("No scheduling conflicts — you're all clear!")
         else:
-            st.info("No scheduling conflicts.")
+            total = len(same) + len(across)
+            st.error(f"{total} conflict(s) detected — review before your day starts.")
+
+            if same:
+                st.markdown("**Same-pet conflicts** *(one pet, two overlapping tasks)*")
+                st.table([
+                    {
+                        "Pet":      a.assigned_pet_name,
+                        "Task A":   f"{a.description} @ {a.time} ({a.duration_minutes}min)",
+                        "Task B":   f"{b.description} @ {b.time} ({b.duration_minutes}min)",
+                        "Fix":      "Reschedule one task to avoid the overlap",
+                    }
+                    for a, b in same
+                ])
+
+            if across:
+                st.markdown("**Cross-pet conflicts** *(you can't be in two places at once)*")
+                st.table([
+                    {
+                        "Pet A":  f"{a.assigned_pet_name}",
+                        "Task A": f"{a.description} @ {a.time} ({a.duration_minutes}min)",
+                        "Pet B":  f"{b.assigned_pet_name}",
+                        "Task B": f"{b.description} @ {b.time} ({b.duration_minutes}min)",
+                        "Fix":    "Stagger start times or ask for help",
+                    }
+                    for a, b in across
+                ])

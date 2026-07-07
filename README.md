@@ -98,12 +98,63 @@ Confidence Level: ★★★★☆ (4/5)
 
 ## 📸 Demo Walkthrough
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
+### UI Features
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+The Streamlit app (`app.py`) exposes four sections:
 
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
+- **Owner Setup** — enter a name and email, click "Create owner" to initialise the session
+- **Add a Pet** — add one or more pets (name, species, age); all pets appear in a live table
+- **Schedule a Task** — pick a pet, set a description, time, priority, duration, and frequency; tasks accumulate across sessions
+- **Generate Schedule** — displays the sorted schedule as a table, per-pet pending counts as metric cards, and any conflicts as labelled warning tables
+
+### Example Workflow
+
+1. Create owner "Jordan"
+2. Add pet "Mochi" (dog, age 3) and pet "Luna" (cat, age 2)
+3. Add a high-priority "Morning walk" for Mochi at 07:00 for 30 min (daily)
+4. Add a medium-priority "Early grooming" for Mochi at 07:15 for 20 min — this overlaps the walk
+5. Click **Generate Schedule** — Mochi's walk appears first (higher priority), and a `[SAME-PET]` conflict warning fires for the overlap
+6. Mark "Morning walk" complete — the scheduler awards 20 points and auto-creates the next occurrence for tomorrow
+
+### Key Scheduler Behaviors
+
+| Behavior | What you see |
+|---|---|
+| Priority-first sort | Evening medication (high) ranks above afternoon training (medium) even though it's later in the day |
+| Chronological sort | `sort_by_time()` reorders any insertion-order list into `07:00 → 08:00 → … → 20:00` |
+| Same-pet conflict | `[SAME-PET]` label with both task names, times, and a suggested fix |
+| Cross-pet conflict | `[CROSS-PET]` label when the owner would need to attend two pets simultaneously |
+| Daily recurrence | Completing a task prints `→ Next '...' auto-scheduled for <tomorrow>` and adds it to the pet |
+
+### Sample CLI Output (`python main.py`)
+
+```
+=== All Tasks Sorted by Time ===
+  [07:00] Morning walk | high priority | 30 min | daily | Pending
+  [07:00] Morning stretch | low priority | 20 min | daily | Pending
+  [07:15] Early grooming | medium priority | 20 min | once | Pending
+  [08:00] Feed breakfast | high priority | 10 min | daily | Pending
+  [09:30] Clean litter box | medium priority | 10 min | daily | Pending
+  [11:00] Vet check-up | high priority | 45 min | once | Pending
+  [14:00] Afternoon training | medium priority | 20 min | weekly | Pending
+  [18:00] Playtime with feather toy | low priority | 20 min | daily | Pending
+  [19:30] Evening medication | high priority | 5 min | daily | Pending
+  [20:00] Evening brush | low priority | 10 min | daily | Pending
+
+Completed 'Morning walk'. +20 points! Total: 20
+  → Next 'Morning walk' auto-scheduled for 2026-07-07
+Completed 'Feed breakfast'. +20 points! Total: 40
+  → Next 'Feed breakfast' auto-scheduled for 2026-07-07
+Completed 'Clean litter box'. +10 points! Total: 50
+  → Next 'Clean litter box' auto-scheduled for 2026-07-07
+
+=== Conflict Warnings for Jordan's Schedule ===
+  [SAME-PET]   Mochi: 'Early grooming' (07:15, 20min) overlaps 'Morning walk' (07:00, 30min)
+  [CROSS-PET]  'Early grooming' (Mochi, 07:15, 20min) overlaps 'Morning stretch' (Luna, 07:00, 20min)
+  [CROSS-PET]  'Morning walk' (Mochi, 07:00, 30min) overlaps 'Morning stretch' (Luna, 07:00, 20min)
+
+=== Auto-Spawned Next Occurrences (due_date set by timedelta) ===
+  [07:00] Morning walk | high priority | 30 min | daily | due 2026-07-07 | Pending
+  [08:00] Feed breakfast | high priority | 10 min | daily | due 2026-07-07 | Pending
+  [09:30] Clean litter box | medium priority | 10 min | daily | due 2026-07-07 | Pending
+```
